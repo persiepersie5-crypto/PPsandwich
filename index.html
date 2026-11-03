@@ -96,7 +96,7 @@ function vToday(noDate){
   '<div class="grid"><div class="stat"><small>ทำทั้งหมด</small><b>'+T.m+' อัน</b></div><div class="stat"><small>ขายได้</small><b>'+T.s+' อัน</b></div>'+
   '<div class="stat"><small>เหลือ</small><b>'+(T.m-T.s)+' อัน</b></div><div class="stat"><small>รายรับ</small><b>'+fmt(T.r)+'</b></div>'+
   '<div class="stat"><small>ต้นทุนของที่ทำ</small><b>'+fmt(T.c)+'</b></div><div class="stat"><small>รายจ่ายอื่นๆ วันนี้</small><b>'+fmt(oth)+'</b></div></div>'+
-  '<div class="stat" style="margin:10px 0"><small>ผลวันนี้</small><b class="'+(net>=0?'g':'r')+'">'+(net>=0?'ได้กำไร ':'ขาดทุน ')+fmt(Math.abs(net))+'</b></div>'+(noDate&&R.length?'<div class="card"><h2>ทำ / ขาย แยกตามเมนู</h2>'+R.map(function(r){return '<div class="li"><span>'+esc(r.n)+'</span><span>ทำ <b>'+r.a+'</b> · ขายได้ <b>'+r.b+'</b> อัน</span></div>'}).join('')+'</div>':'')+rows+
+  '<div class="stat" style="margin:10px 0"><small>ผลวันนี้</small><b class="'+(net>=0?'g':'r')+'">'+(net>=0?'ได้กำไร ':'ขาดทุน ')+fmt(Math.abs(net))+'</b></div>'+(noDate&&R.length?'<div class="card"><h2>ทำ / ขาย แยกตามเมนู</h2>'+R.map(function(r){return '<div class="li"><span>'+esc(r.n)+'</span><span>ทำ <b>'+r.a+'</b> · ขายได้ <b>'+r.b+'</b> อัน</span></div>'}).join('')+'</div>':'')+(noDate?'':rows)+
   '<p class="mu">ต้นทุนคิดจากของที่ทำทั้งหมด รวมที่ขายไม่หมด 1 อัน = ครึ่งชิ้น ราคาและต้นทุนครึ่งหนึ่งของเมนู</p>';
 }
 function setMade(mid,v){var q=+v,m=S.menus.find(function(x){return x.id===mid});if(!m||v===''||!(q>=0))return;
