@@ -80,23 +80,23 @@ function roFix(){if(canEdit)return;
   document.querySelectorAll('#v .btn').forEach(function(b){if((b.getAttribute('onclick')||'').indexOf('pm=')===0)return;
     var c=b.closest('.card');if(c&&c.firstElementChild&&c.firstElementChild.tagName==='H2')c.remove();else{var r=b.closest('.row');if(r)r.remove()}});
   document.querySelectorAll('#v .x').forEach(function(b){b.remove()})}
-function vToday(){
+function vToday(noDate){
   var mine=function(m){return S.sales.filter(function(s){return s.date===td&&(s.name===m.name||s.name===m.name+' (ครึ่ง)')})};
-  var T={m:0,s:0,r:0,c:0};
+  var T={m:0,s:0,r:0,c:0},R=[];
   var rows=S.menus.map(function(m){
     var uc=mcost(m)*0.5,p=S.prod.find(function(x){return x.id==='p_'+td+'_'+m.id}),made=p?p.qty:0,ms=mine(m);
     var sold=ms.reduce(function(a,s){return a+s.qty},0),rev=ms.reduce(function(a,s){return a+s.qty*s.price},0),cost=Math.max(made,sold)*uc,pf=rev-cost;
-    T.m+=made;T.s+=sold;T.r+=rev;T.c+=cost;
+    T.m+=made;T.s+=sold;T.r+=rev;T.c+=cost;R.push({n:m.name,a:made,b:sold});
     return '<div class="card"><div class="row" style="justify-content:space-between"><b>'+esc(m.name)+'</b><span class="'+(pf>=0?'g':'r')+'">'+(pf>=0?'กำไร ':'ขาดทุน ')+fmt(Math.abs(pf))+'</span></div>'+
     '<div class="row" style="margin-top:8px"><span>ทำ</span>'+(canEdit?'<input type="number" min="0" value="'+made+'" onchange="setMade(\''+m.id+'\',this.value)" style="flex:0 1 80px">':'<b>'+made+'</b>')+'<span>อัน</span><span style="margin-left:auto">ขายได้ <b>'+sold+'</b></span>'+
     (canEdit?'<button class="btn" onclick="qSale(\''+m.id+'\',-1)">−1</button><button class="btn" onclick="qSale(\''+m.id+'\',1)">+1 ขาย</button>':'')+'</div>'+
     '<p class="mu" style="margin:6px 0 0">เหลือ '+(made-sold)+' อัน · รายรับ '+fmt(rev)+' · ต้นทุนที่ทำ '+fmt(cost)+'</p></div>'}).join('')||'<p class="mu">เพิ่มเมนูในแท็บ “เมนู” ก่อนนะครับ</p>';
   var oth=S.exps.filter(function(e){return e.date===td&&e.type!=='buy'}).reduce(function(a,e){return a+e.amount},0),net=T.r-T.c-oth;
-  return '<div class="row" style="margin-bottom:10px"><label>วันที่</label><input type="date" value="'+td+'" onchange="td=this.value||td;draw()"></div>'+
+  return (noDate?'':'<div class="row" style="margin-bottom:10px"><label>วันที่</label><input type="date" value="'+td+'" onchange="td=this.value||td;draw()"></div>')+
   '<div class="grid"><div class="stat"><small>ทำทั้งหมด</small><b>'+T.m+' อัน</b></div><div class="stat"><small>ขายได้</small><b>'+T.s+' อัน</b></div>'+
   '<div class="stat"><small>เหลือ</small><b>'+(T.m-T.s)+' อัน</b></div><div class="stat"><small>รายรับ</small><b>'+fmt(T.r)+'</b></div>'+
   '<div class="stat"><small>ต้นทุนของที่ทำ</small><b>'+fmt(T.c)+'</b></div><div class="stat"><small>รายจ่ายอื่นๆ วันนี้</small><b>'+fmt(oth)+'</b></div></div>'+
-  '<div class="stat" style="margin:10px 0"><small>ผลวันนี้</small><b class="'+(net>=0?'g':'r')+'">'+(net>=0?'ได้กำไร ':'ขาดทุน ')+fmt(Math.abs(net))+'</b></div>'+rows+
+  '<div class="stat" style="margin:10px 0"><small>ผลวันนี้</small><b class="'+(net>=0?'g':'r')+'">'+(net>=0?'ได้กำไร ':'ขาดทุน ')+fmt(Math.abs(net))+'</b></div>'+(noDate&&R.length?'<div class="card"><h2>ทำ / ขาย แยกตามเมนู</h2>'+R.map(function(r){return '<div class="li"><span>'+esc(r.n)+'</span><span>ทำ <b>'+r.a+'</b> · ขายได้ <b>'+r.b+'</b> อัน</span></div>'}).join('')+'</div>':'')+rows+
   '<p class="mu">ต้นทุนคิดจากของที่ทำทั้งหมด รวมที่ขายไม่หมด 1 อัน = ครึ่งชิ้น ราคาและต้นทุนครึ่งหนึ่งของเมนู</p>';
 }
 function setMade(mid,v){var q=+v,m=S.menus.find(function(x){return x.id===mid});if(!m||v===''||!(q>=0))return;
@@ -140,7 +140,9 @@ function draw0(){
 }
 function del(k,id){S[k]=S[k].filter(function(x){return x.id!==id});save();draw()}
 /* summary */
-function vSum(){
+function vSum(){if(pm==='d'){td=day;return sumHd()+vToday(1)}return vSum0()}
+function sumHd(){return '<div class="row" style="margin-bottom:10px"><button class="btn" onclick="pm=\'d\';draw()">รายวัน</button><button class="btn" style="opacity:.5" onclick="pm=\'m\';draw()">รายเดือน</button><input type="date" value="'+day+'" onchange="day=this.value||day;draw()"></div>'}
+function vSum0(){
   var inP=function(s){return pm==='d'?s.date===day:s.date.slice(0,7)===month};
   var sl=S.sales.filter(inP),ex=S.exps.filter(inP);
   var rev=0,cogs=0,by={};
