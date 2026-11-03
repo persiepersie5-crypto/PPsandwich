@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>บัญชีร้านแซนวิช</title>
+<title>PPsandwich</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#fbf6ee;--card:#fff;--tx:#2b2118;--mu:#7a6a5a;--ac:#c8641e;--ac2:#fff;--bd:#eadfce;--g:#2d7a3e;--r:#b3382c;color-scheme:light;
@@ -38,16 +38,16 @@ input,select{font:inherit;padding:8px 10px;border:1px solid var(--bd);border-rad
 </head>
 <body>
 <div class="wrap">
-<h1>🥪 บัญชีร้านแซนวิช</h1>
+<h1>🥪 PPsandwich</h1>
 <div id="bn" class="mu r"></div><div id="au"></div><nav id="nav"></nav>
 <div id="v"></div>
 <p class="mu">ข้อมูลเก็บบนฐานข้อมูล Supabase ของร้าน ทุกเครื่องเห็นข้อมูลตรงกัน</p>
 </div>
 <script>
-var S={ings:[],menus:[],sales:[],exps:[]},tab='sum',ed=null,pm='d',day=today(),month=today().slice(0,7);
+var S={ings:[],menus:[],sales:[],exps:[],prod:[]},tab='today',ed=null,pm='d',td=today(),day=today(),month=today().slice(0,7);
 try{var r=localStorage.getItem('sw');if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 var CFG={url:'https://wdcoyrdxtwuwfyjwchrl.supabase.co',key:'sb_publishable_mZ6nyt1MSLKvYqcvsjYejw_r9mA_Ctn'};
-var SB=null,canEdit=false,LT,KS=['ings','menus','sales','exps'],SY={ings:{},menus:{},sales:{},exps:{}};
+var SB=null,canEdit=false,LT,KS=['ings','menus','sales','exps','prod'],SY={ings:{},menus:{},sales:{},exps:{},prod:{}};
 function bn(t){document.getElementById('bn').textContent=t||''}
 window.onerror=function(m){bn('เกิดข้อผิดพลาด: '+m)};
 function save(){try{localStorage.setItem('sw',JSON.stringify(S))}catch(e){}push()}
@@ -59,9 +59,9 @@ function push(){if(!SB||!canEdit)return;var n=0,up=[],del=[];
   if(del.length)SB.from('records').delete().in('id',del).then(chk)}
 function load(){SB.from('records').select('id,kind,data').then(function(r){
   if(r.error){bn('โหลดข้อมูลไม่ได้: '+r.error.message);return}
-  var n={ings:[],menus:[],sales:[],exps:[]};r.data.forEach(function(x){if(n[x.kind])n[x.kind].push(x.data)});
+  var n={ings:[],menus:[],sales:[],exps:[],prod:[]};r.data.forEach(function(x){if(n[x.kind])n[x.kind].push(x.data)});
   if(!r.data.length&&canEdit&&KS.some(function(k){return S[k].length})){push();return}
-  SY={ings:{},menus:{},sales:{},exps:{}};
+  SY={ings:{},menus:{},sales:{},exps:{},prod:{}};
   KS.forEach(function(k){n[k].sort(function(a,b){return (a.t||0)-(b.t||0)});S[k]=n[k];n[k].forEach(function(o){SY[k][o.id]=JSON.stringify(o)})});
   try{localStorage.setItem('sw',JSON.stringify(S))}catch(e){}
   var f=document.activeElement;if(!f||!/INPUT|SELECT|TEXTAREA/.test(f.tagName))draw()})}
@@ -80,7 +80,33 @@ function roFix(){if(canEdit)return;
   document.querySelectorAll('#v .btn').forEach(function(b){if((b.getAttribute('onclick')||'').indexOf('pm=')===0)return;
     var c=b.closest('.card');if(c&&c.firstElementChild&&c.firstElementChild.tagName==='H2')c.remove();else{var r=b.closest('.row');if(r)r.remove()}});
   document.querySelectorAll('#v .x').forEach(function(b){b.remove()})}
-function vBk(){return '<div class="card"><h2>สำรอง / ย้ายข้อมูล</h2><p class="mu">คัดลอกข้อความในช่องนี้เก็บไว้เป็นข้อมูลสำรอง หรือวางข้อความที่คัดลอกมาจากเว็บเก่า แล้วกดนำเข้า</p><textarea id="bk" style="width:100%;height:160px;font:12px monospace;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px">'+esc(JSON.stringify({ings:S.ings,menus:S.menus,sales:S.sales,exps:S.exps}))+'</textarea><div class="row" style="margin-top:8px"><button class="btn" onclick="impBk()">นำเข้า (แทนที่ข้อมูลปัจจุบัน)</button></div></div>'}
+function vToday(){
+  var mine=function(m){return S.sales.filter(function(s){return s.date===td&&(s.name===m.name||s.name===m.name+' (ครึ่ง)')})};
+  var T={m:0,s:0,r:0,c:0};
+  var rows=S.menus.map(function(m){
+    var uc=mcost(m)*0.5,p=S.prod.find(function(x){return x.id==='p_'+td+'_'+m.id}),made=p?p.qty:0,ms=mine(m);
+    var sold=ms.reduce(function(a,s){return a+s.qty},0),rev=ms.reduce(function(a,s){return a+s.qty*s.price},0),cost=Math.max(made,sold)*uc,pf=rev-cost;
+    T.m+=made;T.s+=sold;T.r+=rev;T.c+=cost;
+    return '<div class="card"><div class="row" style="justify-content:space-between"><b>'+esc(m.name)+'</b><span class="'+(pf>=0?'g':'r')+'">'+(pf>=0?'กำไร ':'ขาดทุน ')+fmt(Math.abs(pf))+'</span></div>'+
+    '<div class="row" style="margin-top:8px"><span>ทำ</span>'+(canEdit?'<input type="number" min="0" value="'+made+'" onchange="setMade(\''+m.id+'\',this.value)" style="flex:0 1 80px">':'<b>'+made+'</b>')+'<span>อัน</span><span style="margin-left:auto">ขายได้ <b>'+sold+'</b></span>'+
+    (canEdit?'<button class="btn" onclick="qSale(\''+m.id+'\',-1)">−1</button><button class="btn" onclick="qSale(\''+m.id+'\',1)">+1 ขาย</button>':'')+'</div>'+
+    '<p class="mu" style="margin:6px 0 0">เหลือ '+(made-sold)+' อัน · รายรับ '+fmt(rev)+' · ต้นทุนที่ทำ '+fmt(cost)+'</p></div>'}).join('')||'<p class="mu">เพิ่มเมนูในแท็บ “เมนู” ก่อนนะครับ</p>';
+  var oth=S.exps.filter(function(e){return e.date===td&&e.type!=='buy'}).reduce(function(a,e){return a+e.amount},0),net=T.r-T.c-oth;
+  return '<div class="row" style="margin-bottom:10px"><label>วันที่</label><input type="date" value="'+td+'" onchange="td=this.value||td;draw()"></div>'+
+  '<div class="grid"><div class="stat"><small>ทำทั้งหมด</small><b>'+T.m+' อัน</b></div><div class="stat"><small>ขายได้</small><b>'+T.s+' อัน</b></div>'+
+  '<div class="stat"><small>เหลือ</small><b>'+(T.m-T.s)+' อัน</b></div><div class="stat"><small>รายรับ</small><b>'+fmt(T.r)+'</b></div>'+
+  '<div class="stat"><small>ต้นทุนของที่ทำ</small><b>'+fmt(T.c)+'</b></div><div class="stat"><small>รายจ่ายอื่นๆ วันนี้</small><b>'+fmt(oth)+'</b></div></div>'+
+  '<div class="stat" style="margin:10px 0"><small>ผลวันนี้</small><b class="'+(net>=0?'g':'r')+'">'+(net>=0?'ได้กำไร ':'ขาดทุน ')+fmt(Math.abs(net))+'</b></div>'+rows+
+  '<p class="mu">ต้นทุนคิดจากของที่ทำทั้งหมด รวมที่ขายไม่หมด 1 อัน = ครึ่งชิ้น ราคาและต้นทุนครึ่งหนึ่งของเมนู</p>';
+}
+function setMade(mid,v){var q=+v,m=S.menus.find(function(x){return x.id===mid});if(!m||v===''||!(q>=0))return;
+  var id='p_'+td+'_'+mid,p=S.prod.find(function(x){return x.id===id});
+  if(p){p.qty=q;p.cost=mcost(m)*0.5}else S.prod.push({id:id,date:td,menu:mid,name:m.name,qty:q,cost:mcost(m)*0.5});save();draw()}
+function qSale(mid,d){var m=S.menus.find(function(x){return x.id===mid});if(!m)return;
+  if(d>0)S.sales.push({id:uid(),date:td,name:m.name,qty:1,price:m.price*0.5,cost:mcost(m)*0.5});
+  else{var l=S.sales.filter(function(s){return s.date===td&&(s.name===m.name||s.name===m.name+' (ครึ่ง)')}).pop();if(l){if(l.qty>1)l.qty-=1;else S.sales=S.sales.filter(function(s){return s!==l})}}
+  save();draw()}
+function vBk(){return '<div class="card"><h2>สำรอง / ย้ายข้อมูล</h2><p class="mu">คัดลอกข้อความในช่องนี้เก็บไว้เป็นข้อมูลสำรอง หรือวางข้อความที่คัดลอกมาจากเว็บเก่า แล้วกดนำเข้า</p><textarea id="bk" style="width:100%;height:160px;font:12px monospace;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px">'+esc(JSON.stringify({ings:S.ings,menus:S.menus,sales:S.sales,exps:S.exps,prod:S.prod}))+'</textarea><div class="row" style="margin-top:8px"><button class="btn" onclick="impBk()">นำเข้า (แทนที่ข้อมูลปัจจุบัน)</button></div></div>'}
 function impBk(){try{var d=JSON.parse(val('bk'));KS.forEach(function(k){S[k]=Array.isArray(d[k])?d[k]:[]});save();draw();bn('นำเข้าแล้ว')}catch(e){bn('ข้อมูลไม่ถูกต้อง')}}
 var uid=function(){return Math.random().toString(36).slice(2,9)};
 var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
@@ -89,7 +115,7 @@ function today(){var d=new Date();return new Date(d.getTime()-d.getTimezoneOffse
 var val=function(id){return document.getElementById(id).value};
 function ing(id){return S.ings.find(function(x){return x.id===id})}
 function mcost(m){return m.recipe.reduce(function(a,r){var i=ing(r.ing);return a+(i?i.price*r.qty:0)},0)}
-var TABS=[['sum','สรุป'],['sale','ขาย'],['exp','รายจ่าย'],['menu','เมนู'],['ing','วัตถุดิบ'],['bk','สำรอง']];
+var TABS=[['today','วันนี้'],['sum','สรุป'],['sale','ขาย'],['exp','รายจ่าย'],['menu','เมนู'],['ing','วัตถุดิบ'],['bk','สำรอง']];
 function go(t){tab=t;ed=null;draw()}
 var EB=function(k,id){return '<button class="x" style="color:var(--mu)" onclick="edit(\''+k+'\',\''+id+'\')">✎</button>'};
 function edit(k,id){ed=k+id;draw()}
@@ -110,7 +136,7 @@ function saveRec(id,k){var q=+val('e2');if(!(q>0))return;upd('menus',id,function
 function draw(){draw0();drawAuth();roFix()}
 function draw0(){
   document.getElementById('nav').innerHTML=TABS.map(function(t){return '<button class="'+(t[0]===tab?'on':'')+'" onclick="go(\''+t[0]+'\')">'+t[1]+'</button>'}).join('');
-  document.getElementById('v').innerHTML=({sum:vSum,sale:vSale,exp:vExp,menu:vMenu,ing:vIng,bk:vBk})[tab]();
+  document.getElementById('v').innerHTML=({sum:vSum,sale:vSale,exp:vExp,menu:vMenu,ing:vIng,bk:vBk,today:vToday})[tab]();
 }
 function del(k,id){S[k]=S[k].filter(function(x){return x.id!==id});save();draw()}
 /* summary */
