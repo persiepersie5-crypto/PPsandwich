@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>บัญชีร้านแซนวิช</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fbf6ee;--card:#fff;--tx:#2b2118;--mu:#7a6a5a;--ac:#c8641e;--ac2:#fff;--bd:#eadfce;--g:#2d7a3e;--r:#b3382c;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1713;--card:#272019;--tx:#f3eadf;--mu:#a8998a;--ac:#e88a47;--ac2:#1c1713;--bd:#3a3026;--g:#5fc274;--r:#f0786b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c1713;--card:#272019;--tx:#f3eadf;--mu:#a8998a;--ac:#e88a47;--ac2:#1c1713;--bd:#3a3026;--g:#5fc274;--r:#f0786b;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 'Noto Sans Thai',system-ui,sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0 12px}
+nav{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px}
+nav button{flex:1;white-space:nowrap;border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 12px;border-radius:999px;font:inherit;cursor:pointer}
+nav button.on{background:var(--ac);color:var(--ac2);border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{font-size:16px;margin:0 0 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input,select{font:inherit;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);min-width:0;flex:1 1 120px}
+.btn{font:inherit;border:0;background:var(--ac);color:var(--ac2);padding:8px 16px;border-radius:8px;cursor:pointer;flex:0 0 auto}
+.x{background:none;border:0;color:var(--r);cursor:pointer;font-size:18px;padding:0 6px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px}
+.stat small{color:var(--mu);display:block}.stat b{font-size:20px}
+.g{color:var(--g)}.r{color:var(--r)}.mu{color:var(--mu);font-size:14px}
+.li{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--bd);align-items:center}
+.li:first-of-type{border-top:0}
+.sc{overflow-x:auto}
+#bn{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card)}
+#bn:not(:empty){padding:8px 12px;border:1px solid var(--r);border-radius:10px;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>🥪 บัญชีร้านแซนวิช</h1>
+<div id="bn" class="mu r"></div><div id="au"></div><nav id="nav"></nav>
+<div id="v"></div>
+<p class="mu">ข้อมูลเก็บบนฐานข้อมูล Supabase ของร้าน ทุกเครื่องเห็นข้อมูลตรงกัน</p>
+</div>
+<script>
+var S={ings:[],menus:[],sales:[],exps:[]},tab='sum',ed=null,pm='d',day=today(),month=today().slice(0,7);
+try{var r=localStorage.getItem('sw');if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+var CFG={url:'https://wdcoyrdxtwuwfyjwchrl.supabase.co',key:'sb_publishable_mZ6nyt1MSLKvYqcvsjYejw_r9mA_Ctn'};
+var SB=null,canEdit=false,LT,KS=['ings','menus','sales','exps'],SY={ings:{},menus:{},sales:{},exps:{}};
+function bn(t){document.getElementById('bn').textContent=t||''}
+window.onerror=function(m){bn('เกิดข้อผิดพลาด: '+m)};
+function save(){try{localStorage.setItem('sw',JSON.stringify(S))}catch(e){}push()}
+function chk(r){if(r.error){bn('บันทึกไม่สำเร็จ: '+r.error.message);load()}}
+function push(){if(!SB||!canEdit)return;var n=0,up=[],del=[];
+  KS.forEach(function(k){var seen={};S[k].forEach(function(o){o.t=o.t||Date.now()+(n++);seen[o.id]=1;var j=JSON.stringify(o);if(SY[k][o.id]!==j){SY[k][o.id]=j;up.push({id:o.id,kind:k,data:o})}});
+    Object.keys(SY[k]).forEach(function(id){if(!seen[id]){delete SY[k][id];del.push(id)}})});
+  if(up.length)SB.from('records').upsert(up).then(chk);
+  if(del.length)SB.from('records').delete().in('id',del).then(chk)}
+function load(){SB.from('records').select('id,kind,data').then(function(r){
+  if(r.error){bn('โหลดข้อมูลไม่ได้: '+r.error.message);return}
+  var n={ings:[],menus:[],sales:[],exps:[]};r.data.forEach(function(x){if(n[x.kind])n[x.kind].push(x.data)});
+  if(!r.data.length&&canEdit&&KS.some(function(k){return S[k].length})){push();return}
+  SY={ings:{},menus:{},sales:{},exps:{}};
+  KS.forEach(function(k){n[k].sort(function(a,b){return (a.t||0)-(b.t||0)});S[k]=n[k];n[k].forEach(function(o){SY[k][o.id]=JSON.stringify(o)})});
+  try{localStorage.setItem('sw',JSON.stringify(S))}catch(e){}
+  var f=document.activeElement;if(!f||!/INPUT|SELECT|TEXTAREA/.test(f.tagName))draw()})}
+function init(){
+  if(!window.supabase||CFG.url.indexOf('http')!==0){bn('ยังไม่ได้ตั้งค่า Supabase (ใส่ URL และ key ในไฟล์ index.html) ตอนนี้ข้อมูลเก็บในเครื่องนี้เท่านั้น');canEdit=true;draw();return}
+  SB=supabase.createClient(CFG.url,CFG.key);
+  SB.auth.getSession().then(function(r){canEdit=!!(r.data&&r.data.session);load()});
+  SB.auth.onAuthStateChange(function(ev,s){var c=!!s;if(c!==canEdit){canEdit=c;load()}});
+  SB.channel('rec').on('postgres_changes',{event:'*',schema:'public',table:'records'},function(){clearTimeout(LT);LT=setTimeout(load,400)}).subscribe()}
+function drawAuth(){var a=document.getElementById('au');if(!SB){a.innerHTML='';return}
+  a.innerHTML=canEdit?'<div class="row" style="margin-bottom:10px"><span class="mu">เข้าสู่ระบบแล้ว (แก้ไขได้)</span><button class="x" style="color:var(--mu)" onclick="SB.auth.signOut()">ออกจากระบบ</button></div>':'<details class="card"><summary class="mu">ดูอย่างเดียว · เจ้าของร้านเข้าสู่ระบบเพื่อแก้ไข</summary><div class="row" style="margin-top:8px"><input id="le" type="email" placeholder="อีเมล"><input id="lp" type="password" placeholder="รหัสผ่าน"><button class="btn" onclick="login()">เข้าสู่ระบบ</button></div></details>'}
+function login(){SB.auth.signInWithPassword({email:val('le'),password:val('lp')}).then(function(r){bn(r.error?'เข้าสู่ระบบไม่ได้: '+r.error.message:'')})}
+function roFix(){if(canEdit)return;
+  if(tab==='bk'){tab='sum';draw();return}
+  document.querySelectorAll('#nav button').forEach(function(b){if(b.textContent==='สำรอง')b.remove()});
+  document.querySelectorAll('#v .btn').forEach(function(b){if((b.getAttribute('onclick')||'').indexOf('pm=')===0)return;
+    var c=b.closest('.card');if(c&&c.firstElementChild&&c.firstElementChild.tagName==='H2')c.remove();else{var r=b.closest('.row');if(r)r.remove()}});
+  document.querySelectorAll('#v .x').forEach(function(b){b.remove()})}
+function vBk(){return '<div class="card"><h2>สำรอง / ย้ายข้อมูล</h2><p class="mu">คัดลอกข้อความในช่องนี้เก็บไว้เป็นข้อมูลสำรอง หรือวางข้อความที่คัดลอกมาจากเว็บเก่า แล้วกดนำเข้า</p><textarea id="bk" style="width:100%;height:160px;font:12px monospace;background:var(--bg);color:var(--tx);border:1px solid var(--bd);border-radius:8px">'+esc(JSON.stringify({ings:S.ings,menus:S.menus,sales:S.sales,exps:S.exps}))+'</textarea><div class="row" style="margin-top:8px"><button class="btn" onclick="impBk()">นำเข้า (แทนที่ข้อมูลปัจจุบัน)</button></div></div>'}
+function impBk(){try{var d=JSON.parse(val('bk'));KS.forEach(function(k){S[k]=Array.isArray(d[k])?d[k]:[]});save();draw();bn('นำเข้าแล้ว')}catch(e){bn('ข้อมูลไม่ถูกต้อง')}}
+var uid=function(){return Math.random().toString(36).slice(2,9)};
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var fmt=function(n){return (Math.round(n*100)/100).toLocaleString('th-TH')+' ฿'};
+function today(){var d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
+var val=function(id){return document.getElementById(id).value};
+function ing(id){return S.ings.find(function(x){return x.id===id})}
+function mcost(m){return m.recipe.reduce(function(a,r){var i=ing(r.ing);return a+(i?i.price*r.qty:0)},0)}
+var TABS=[['sum','สรุป'],['sale','ขาย'],['exp','รายจ่าย'],['menu','เมนู'],['ing','วัตถุดิบ'],['bk','สำรอง']];
+function go(t){tab=t;ed=null;draw()}
+var EB=function(k,id){return '<button class="x" style="color:var(--mu)" onclick="edit(\''+k+'\',\''+id+'\')">✎</button>'};
+function edit(k,id){ed=k+id;draw()}
+function cancel(){ed=null;draw()}
+function upd(k,id,f){var o=S[k].find(function(x){return x.id===id});if(o)f(o);ed=null;save();draw()}
+function fld(id,v,t,ph){return '<input id="'+id+'" type="'+t+'" value="'+esc(v)+'" placeholder="'+ph+'"'+(t==='number'?' step="any" min="0"':'')+'>'}
+function btns(f){return '<button class="btn" onclick="'+f+'">บันทึก</button><button class="x" onclick="cancel()">ยกเลิก</button>'}
+function editSale(s){return '<div class="card" style="margin:6px 0"><div class="row">'+fld('e1',s.date,'date','')+fld('e2',s.name,'text','ชื่อเมนู')+fld('e3',s.qty,'number','จำนวน')+fld('e4',s.price,'number','ราคาขาย/ชิ้น')+fld('e5',s.cost,'number','ต้นทุน/ชิ้น')+btns("saveSale('"+s.id+"')")+'</div></div>'}
+function saveSale(id){var n=val('e2').trim(),q=+val('e3'),p=+val('e4'),c=+val('e5');if(!n||!(q>0)||!(p>=0)||!(c>=0))return;upd('sales',id,function(o){o.date=val('e1')||o.date;o.name=n;o.qty=q;o.price=p;o.cost=c})}
+function editExp(e){return '<div class="card" style="margin:6px 0"><div class="row">'+fld('e1',e.date,'date','')+fld('e2',e.name,'text','ชื่อรายการ')+'<select id="e4">'+typeOpts(e.type)+'</select>'+fld('e3',e.amount,'number','จำนวนเงิน')+btns("saveExp('"+e.id+"')")+'</div></div>'}
+function saveExp(id){var n=val('e2').trim(),a=+val('e3');if(!n||!(a>0))return;upd('exps',id,function(o){o.date=val('e1')||o.date;o.name=n;o.amount=a;o.type=val('e4')})}
+function editIng(i){return '<div class="card" style="margin:6px 0"><div class="row">'+fld('e1',i.name,'text','ชื่อ')+fld('e2',i.unit,'text','หน่วย')+fld('e3',i.price,'number','ราคาต่อหน่วย')+btns("saveIng('"+i.id+"')")+'</div></div>'}
+function saveIng(id){var n=val('e1').trim(),u=val('e2').trim()||'หน่วย',p=+val('e3');if(!n||!(p>=0))return;upd('ings',id,function(o){o.name=n;o.unit=u;o.price=p})}
+function editMenuHd(m){return '<div class="row">'+fld('e1',m.name,'text','ชื่อเมนู')+fld('e2',m.price,'number','ราคาขาย')+btns("saveMenu('"+m.id+"')")+'</div>'}
+function saveMenu(id){var n=val('e1').trim(),p=+val('e2');if(!n||!(p>=0))return;upd('menus',id,function(o){o.name=n;o.price=p})}
+function recEdit(m,r,k){var o=S.ings.map(function(x){return '<option value="'+x.id+'"'+(x.id===r.ing?' selected':'')+'>'+esc(x.name)+'</option>'}).join('');return '<div class="li"><span class="row"><select id="e1">'+o+'</select><input type="number" id="e2" value="'+r.qty+'" min="0" step="any" style="flex:0 1 90px"></span><span>'+btns("saveRec('"+m.id+"',"+k+")")+'</span></div>'}
+function saveRec(id,k){var q=+val('e2');if(!(q>0))return;upd('menus',id,function(m){m.recipe[k]={ing:val('e1'),qty:q}})}
+function draw(){draw0();drawAuth();roFix()}
+function draw0(){
+  document.getElementById('nav').innerHTML=TABS.map(function(t){return '<button class="'+(t[0]===tab?'on':'')+'" onclick="go(\''+t[0]+'\')">'+t[1]+'</button>'}).join('');
+  document.getElementById('v').innerHTML=({sum:vSum,sale:vSale,exp:vExp,menu:vMenu,ing:vIng,bk:vBk})[tab]();
+}
+function del(k,id){S[k]=S[k].filter(function(x){return x.id!==id});save();draw()}
+/* summary */
+function vSum(){
+  var inP=function(s){return pm==='d'?s.date===day:s.date.slice(0,7)===month};
+  var sl=S.sales.filter(inP),ex=S.exps.filter(inP);
+  var rev=0,cogs=0,by={};
+  sl.forEach(function(s){var a=s.qty*s.price,c=s.qty*s.cost;rev+=a;cogs+=c;var b=by[s.name]||(by[s.name]={q:0,a:0,c:0});b.q+=s.qty;b.a+=a;b.c+=c});
+  var oth=ex.filter(function(e){return e.type!=='buy'}).reduce(function(a,e){return a+e.amount},0),buy=ex.filter(function(e){return e.type==='buy'}).reduce(function(a,e){return a+e.amount},0),gp=rev-cogs,net=gp-oth;
+  var rows=Object.keys(by).map(function(n){var b=by[n];return '<div class="li"><span>'+esc(n)+' <span class="mu">× '+b.q+'</span></span><span>'+fmt(b.a)+' <span class="'+(b.a-b.c>=0?'g':'r')+'">(กำไร '+fmt(b.a-b.c)+')</span></span></div>'}).join('')||'<p class="mu">ยังไม่มีรายการขายในช่วงนี้</p>';
+  return '<div class="row" style="margin-bottom:10px"><button class="btn" style="'+(pm==='d'?'':'opacity:.5')+'" onclick="pm=\'d\';draw()">รายวัน</button><button class="btn" style="'+(pm==='m'?'':'opacity:.5')+'" onclick="pm=\'m\';draw()">รายเดือน</button>'+(pm==='d'?'<input type="date" value="'+day+'" onchange="day=this.value||day;draw()">':'<input type="month" value="'+month+'" onchange="month=this.value||month;draw()">')+'</div>'+
+  '<div class="grid"><div class="stat"><small>รายรับ</small><b>'+fmt(rev)+'</b></div><div class="stat"><small>ต้นทุนวัตถุดิบ</small><b>'+fmt(cogs)+'</b></div>'+
+  '<div class="stat"><small>รายจ่ายอื่นๆ</small><b>'+fmt(oth)+'</b></div><div class="stat"><small>กำไรสุทธิ</small><b class="'+(net>=0?'g':'r')+'">'+fmt(net)+'</b></div></div>'+
+  '<div class="card" style="margin-top:12px"><h2>ยอดขายแยกเมนู</h2>'+rows+'</div>'+
+  '<div class="stat" style="margin-bottom:10px"><small>ซื้อวัตถุดิบในช่วงนี้ (บันทึกไว้เฉยๆ ไม่หักกำไร)</small><b>'+fmt(buy)+'</b></div><p class="mu">กำไรสุทธิ = รายรับ − ต้นทุนวัตถุดิบตามสูตร − รายจ่ายอื่นๆ (เช่น ค่าแก๊ส ถุง ค่าเช่า)</p>';
+}
+/* sales */
+function vSale(){
+  var opts=S.menus.map(function(m){return '<option value="'+m.id+'">'+esc(m.name)+'</option>'}).join('');
+  var list=S.sales.slice().sort(function(a,b){return b.date.localeCompare(a.date)}).slice(0,40).map(function(s){
+    if(ed==='sales'+s.id)return editSale(s);return '<div class="li"><span>'+s.date+' · '+esc(s.name)+' × '+s.qty+'</span><span>'+fmt(s.qty*s.price)+EB('sales',s.id)+'<button class="x" onclick="del(\'sales\',\''+s.id+'\')">×</button></span></div>'}).join('')||'<p class="mu">ยังไม่มีรายการ</p>';
+  return '<div class="card"><h2>บันทึกการขาย</h2>'+(S.menus.length?'<div class="row"><input type="date" id="sd" value="'+today()+'"><select id="sm">'+opts+'</select><input type="number" id="sq" value="1" min="1" style="flex:0 1 80px"><button class="btn" onclick="addSale()">เพิ่ม</button></div>':'<p class="mu">ไปเพิ่มเมนูในแท็บ “เมนู” ก่อนนะครับ</p>')+'</div><div class="card"><h2>รายการล่าสุด</h2>'+list+'</div>';
+}
+function addSale(){var m=S.menus.find(function(x){return x.id===val('sm')}),q=+val('sq'),f=0.5;if(!m||!(q>0))return;
+  S.sales.push({id:uid(),date:val('sd')||today(),name:m.name,qty:q,price:m.price*f,cost:mcost(m)*f});save();draw()}
+/* expenses */
+function vExp(){
+  var list=S.exps.slice().sort(function(a,b){return b.date.localeCompare(a.date)}).slice(0,40).map(function(e){
+    if(ed==='exps'+e.id)return editExp(e);return '<div class="li"><span>'+e.date+' · '+esc(e.name)+(e.type==='buy'?' <span class="mu">[ซื้อวัตถุดิบ]</span>':'')+'</span><span>'+fmt(e.amount)+EB('exps',e.id)+'<button class="x" onclick="del(\'exps\',\''+e.id+'\')">×</button></span></div>'}).join('')||'<p class="mu">ยังไม่มีรายการ</p>';
+  return '<div class="card"><h2>บันทึกรายจ่าย</h2><div class="row"><input type="date" id="ed" value="'+today()+'"><select id="et">'+typeOpts('oth')+'</select><input id="en" placeholder="ชื่อรายการ เช่น ไส้กรอก 1 แพค, ค่าแก๊ส"><input type="number" id="ea" placeholder="จำนวนเงิน" min="0"><button class="btn" onclick="addExp()">เพิ่ม</button></div><p class="mu"><b>ซื้อวัตถุดิบ</b> = ซื้อของมาไว้ (เช่น ไส้กรอก 1 แพค) บันทึกเก็บไว้ดูยอดซื้อเฉยๆ ไม่นำไปหักกำไร เพราะต้นทุนคิดจากสูตรเมนูอยู่แล้ว<br><b>รายจ่ายอื่นๆ</b> = ค่าแก๊ส ถุง ค่าเช่า ฯลฯ จะถูกหักออกจากกำไรสุทธิ</p></div>'+buyDaily()+'<div class="card"><h2>รายการล่าสุด</h2>'+list+'</div>';
+}
+function buyDaily(){var by={};S.exps.forEach(function(e){if(e.type!=='buy')return;var b=by[e.date]||(by[e.date]={t:0,n:[]});b.t+=e.amount;b.n.push(esc(e.name))});var ds=Object.keys(by).sort().reverse().slice(0,14);return '<div class="card"><h2>สรุปซื้อวัตถุดิบรายวัน</h2>'+(ds.map(function(d){return '<div class="li"><span>'+d+'<br><span class="mu">'+by[d].n.join(', ')+'</span></span><b>'+fmt(by[d].t)+'</b></div>'}).join('')||'<p class="mu">ยังไม่มีรายการซื้อวัตถุดิบ</p>')+'</div>'}
+function typeOpts(t){return '<option value="oth"'+(t==='buy'?'':' selected')+'>รายจ่ายอื่นๆ (หักจากกำไร)</option><option value="buy"'+(t==='buy'?' selected':'')+'>ซื้อวัตถุดิบ (ไม่หักกำไร)</option>'}
+function addExp(){var n=val('en').trim(),a=+val('ea');if(!n||!(a>0))return;S.exps.push({id:uid(),date:val('ed')||today(),name:n,amount:a,type:val('et')});save();draw()}
+/* ingredients */
+function vIng(){
+  var list=S.ings.map(function(i){if(ed==='ings'+i.id)return editIng(i);return '<div class="li"><span>'+esc(i.name)+'</span><span>'+fmt(i.price)+' / '+esc(i.unit)+EB('ings',i.id)+'<button class="x" onclick="delIng(\''+i.id+'\')">×</button></span></div>'}).join('')||'<p class="mu">ยังไม่มีวัตถุดิบ</p>';
+  return '<div class="card"><h2>เพิ่มวัตถุดิบ</h2><div class="row"><input id="in" placeholder="ชื่อ เช่น ขนมปัง ไส้กรอก ชีส"><input id="iu" placeholder="หน่วย เช่น แผ่น ชิ้น กรัม"><input type="number" id="ip" placeholder="ราคาต่อหน่วย" min="0" step="any"><button class="btn" onclick="addIng()">เพิ่ม</button></div></div><div class="card"><h2>วัตถุดิบทั้งหมด</h2>'+list+'</div>';
+}
+function addIng(){var n=val('in').trim(),u=val('iu').trim()||'หน่วย',p=+val('ip');if(!n||!(p>=0)||val('ip')==='')return;S.ings.push({id:uid(),name:n,unit:u,price:p});save();draw()}
+function delIng(id){S.menus.forEach(function(m){m.recipe=m.recipe.filter(function(r){return r.ing!==id})});del('ings',id)}
+/* menus */
+function vMenu(){
+  var io=S.ings.map(function(i){return '<option value="'+i.id+'">'+esc(i.name)+' ('+esc(i.unit)+')</option>'}).join('');
+  var cards=S.menus.map(function(m){var c=mcost(m);
+    var rec=m.recipe.map(function(r,k){var i=ing(r.ing);if(ed==='rec'+m.id+k)return recEdit(m,r,k);return '<div class="li"><span>'+(i?esc(i.name):'?')+' × '+r.qty+' '+(i?esc(i.unit):'')+'</span><span>'+fmt(i?i.price*r.qty:0)+'<button class="x" style="color:var(--mu)" onclick="edit(\'rec\',\''+m.id+k+'\')">✎</button><button class="x" onclick="delRec(\''+m.id+'\','+k+')">×</button></span></div>'}).join('');
+    return '<div class="card">'+(ed==='menus'+m.id?editMenuHd(m):'<div class="row" style="justify-content:space-between"><h2 style="margin:0">'+esc(m.name)+'</h2><span>'+EB('menus',m.id)+'<button class="x" onclick="del(\'menus\',\''+m.id+'\')">ลบเมนู</button></span></div>')+
+    '<p class="mu">ราคาขาย '+fmt(m.price)+' · ต้นทุน '+fmt(c)+' · กำไรต่อชิ้น <b class="'+(m.price-c>=0?'g':'r')+'">'+fmt(m.price-c)+'</b></p>'+rec+
+    (S.ings.length?'<div class="row" style="margin-top:8px"><select id="ri'+m.id+'">'+io+'</select><input type="number" id="rq'+m.id+'" value="1" placeholder="ปริมาณ" min="0" step="any" style="flex:0 1 90px"><button class="btn" onclick="addRec(\''+m.id+'\')">+ ใส่สูตร</button></div>':'<p class="mu">เพิ่มวัตถุดิบก่อนเพื่อใส่สูตร</p>')+'</div>'}).join('');
+  return '<div class="card"><h2>เพิ่มเมนู</h2><div class="row"><input id="mn" placeholder="ชื่อเมนู เช่น แซนวิชไข่แฮม"><input type="number" id="mp" placeholder="ราคาขาย" min="0"><button class="btn" onclick="addMenu()">เพิ่ม</button></div></div>'+cards;
+}
+function addMenu(){var n=val('mn').trim(),p=+val('mp');if(!n||!(p>=0)||val('mp')==='')return;S.menus.push({id:uid(),name:n,price:p,recipe:[]});save();draw()}
+function addRec(id){var m=S.menus.find(function(x){return x.id===id}),q=+val('rq'+id);if(!m)return;if(!(q>0)){document.getElementById('bn').textContent='กรุณาใส่ปริมาณก่อน (เช่น 1)';document.getElementById('rq'+id).focus();return}document.getElementById('bn').textContent='';m.recipe.push({ing:val('ri'+id),qty:q});save();draw()}
+function delRec(id,k){var m=S.menus.find(function(x){return x.id===id});m.recipe.splice(k,1);save();draw()}
+init();
+</script>
+</body>
+</html>
