@@ -88,7 +88,7 @@ function vToday(noDate){
     var sold=ms.reduce(function(a,s){return a+s.qty},0),rev=ms.reduce(function(a,s){return a+s.qty*s.price},0),cost=Math.max(made,sold)*uc,pf=rev-cost;
     T.m+=made;T.s+=sold;T.r+=rev;T.c+=cost;R.push({n:m.name,a:made,b:sold});
     return '<div class="card"><div class="row" style="justify-content:space-between"><b>'+esc(m.name)+'</b><span class="'+(pf>=0?'g':'r')+'">'+(pf>=0?'กำไร ':'ขาดทุน ')+fmt(Math.abs(pf))+'</span></div>'+
-    '<div class="row" style="margin-top:8px"><span>ทำ</span>'+(canEdit?'<input type="number" min="0" value="'+made+'" onchange="setMade(\''+m.id+'\',this.value)" style="flex:0 1 80px">':'<b>'+made+'</b>')+'<span>อัน</span><span style="margin-left:auto">ขายได้ <b>'+sold+'</b></span>'+
+    '<div class="row" style="margin-top:8px"><span>ทำ</span>'+(canEdit?'<button class="btn" onclick="chMade(\''+m.id+'\',-1)">−</button><b style="min-width:28px;text-align:center">'+made+'</b><button class="btn" onclick="chMade(\''+m.id+'\',1)">+</button>':'<b>'+made+'</b>')+'<span>อัน</span><span style="margin-left:auto">ขายได้ <b>'+sold+'</b></span>'+
     (canEdit?'<button class="btn" onclick="qSale(\''+m.id+'\',-1)">−1</button><button class="btn" onclick="qSale(\''+m.id+'\',1)">+1 ขาย</button>':'')+'</div>'+
     '<p class="mu" style="margin:6px 0 0">เหลือ '+(made-sold)+' อัน · รายรับ '+fmt(rev)+' · ต้นทุนที่ทำ '+fmt(cost)+'</p></div>'}).join('')||'<p class="mu">เพิ่มเมนูในแท็บ “เมนู” ก่อนนะครับ</p>';
   var oth=S.exps.filter(function(e){return e.date===td&&e.type!=='buy'}).reduce(function(a,e){return a+e.amount},0),net=T.r-T.c-oth;
@@ -99,6 +99,7 @@ function vToday(noDate){
   '<div class="stat" style="margin:10px 0"><small>ผลวันนี้</small><b class="'+(net>=0?'g':'r')+'">'+(net>=0?'ได้กำไร ':'ขาดทุน ')+fmt(Math.abs(net))+'</b></div>'+(noDate&&R.length?'<div class="card"><h2>ทำ / ขาย แยกตามเมนู</h2>'+R.map(function(r){return '<div class="li"><span>'+esc(r.n)+'</span><span>ทำ <b>'+r.a+'</b> · ขายได้ <b>'+r.b+'</b> อัน</span></div>'}).join('')+'</div>':'')+(noDate?'':rows)+
   '<p class="mu">ต้นทุนคิดจากของที่ทำทั้งหมด รวมที่ขายไม่หมด 1 อัน = ครึ่งชิ้น ราคาและต้นทุนครึ่งหนึ่งของเมนู</p>';
 }
+function chMade(mid,d){var p=S.prod.find(function(x){return x.id==='p_'+td+'_'+mid});setMade(mid,Math.max(0,(p?p.qty:0)+d))}
 function setMade(mid,v){var q=+v,m=S.menus.find(function(x){return x.id===mid});if(!m||v===''||!(q>=0))return;
   var id='p_'+td+'_'+mid,p=S.prod.find(function(x){return x.id===id});
   if(p){p.qty=q;p.cost=mcost(m)*0.5}else S.prod.push({id:id,date:td,menu:mid,name:m.name,qty:q,cost:mcost(m)*0.5});save();draw()}
