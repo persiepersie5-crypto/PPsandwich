@@ -51,7 +51,7 @@ input,select{font:inherit;padding:8px 10px;border:1px solid var(--bd);border-rad
 <script>
 var S={ings:[],menus:[],sales:[],exps:[],prod:[]},tab='today',ed=null,pm='d',td=today(),day=today(),month=today().slice(0,7);
 try{var r=localStorage.getItem('sw');if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
-var CFG={url:'https://wdcoyrdxtwuwfyjwchrl.supabase.co',key:'sb_publishable_mZ6nyt1MSLKvYqcvsjYejw_r9mA_Ctn'};
+var CFG={owner:'owner@ppsandwich.example.com',url:'https://wdcoyrdxtwuwfyjwchrl.supabase.co',key:'sb_publishable_mZ6nyt1MSLKvYqcvsjYejw_r9mA_Ctn'};
 var SB=null,canEdit=false,LT,KS=['ings','menus','sales','exps','prod'],SY={ings:{},menus:{},sales:{},exps:{},prod:{}};
 function bn(t){document.getElementById('bn').textContent=t||''}
 window.onerror=function(m){bn('เกิดข้อผิดพลาด: '+m)};
@@ -74,7 +74,7 @@ function init(){
   if(!window.supabase||CFG.url.indexOf('http')!==0){bn('ยังไม่ได้ตั้งค่า Supabase (ใส่ URL และ key ในไฟล์ index.html) ตอนนี้ข้อมูลเก็บในเครื่องนี้เท่านั้น');canEdit=true;draw();return}
   SB=supabase.createClient(CFG.url,CFG.key);
   SB.auth.getSession().then(function(r){canEdit=!!(r.data&&r.data.session);load()});
-  SB.auth.onAuthStateChange(function(ev,s){var c=!!s;if(c!==canEdit){canEdit=c;load()}});
+  SB.auth.onAuthStateChange(function(ev,s){var c=!!s;if(c!==canEdit){if(!c){KS.forEach(function(k){S[k]=[];SY[k]={}});try{localStorage.removeItem('sw')}catch(e){}}canEdit=c;if(c)load();else draw()}});
   SB.channel('rec').on('postgres_changes',{event:'*',schema:'public',table:'records'},function(){clearTimeout(LT);LT=setTimeout(load,400)}).subscribe()}
 function drawAuth(){var a=document.getElementById('au');if(!SB){a.innerHTML='';return}
   a.innerHTML=canEdit?'<div class="row" style="margin-bottom:10px"><span class="mu">เข้าสู่ระบบแล้ว (แก้ไขได้)</span><button class="x" style="color:var(--mu)" onclick="SB.auth.signOut()">ออกจากระบบ</button></div>':padHtml()}
@@ -83,13 +83,10 @@ function padHtml(){var em='';try{em=localStorage.getItem('swe')||''}catch(e){}
   var dots='';for(var i=0;i<6;i++)dots+='<span class="dot'+(i<pin.length?' on':'')+'"></span>';
   var keys=[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(function(k){return k===''?'<span></span>':'<button class="key" onclick="pk(\''+k+'\')">'+k+'</button>'}).join('');
   return '<details class="card"'+(padOpen?' open':'')+' ontoggle="padOpen=this.open"><summary class="mu">ดูอย่างเดียว · เจ้าของร้านเข้าสู่ระบบเพื่อแก้ไข</summary>'+
-  (em?'<p class="mu" style="text-align:center;margin:10px 0 0">'+esc(em)+' · <a href="#" onclick="chEm();return false">เปลี่ยนอีเมล</a></p>':'<div class="row" style="margin-top:10px"><input id="le" type="email" placeholder="อีเมลเจ้าของร้าน" value="'+esc(pem)+'" oninput="pem=this.value"></div>')+
-  '<div class="dots">'+dots+'</div><div class="pad">'+keys+'</div></details>'}
+    '<div class="dots">'+dots+'</div><div class="pad">'+keys+'</div></details>'}
 function pk(k){if(pbusy)return;
   if(k==='⌫'){pin=pin.slice(0,-1);drawAuth();return}
-  var em='';try{em=localStorage.getItem('swe')||''}catch(e){}
-  if(!em)em=pem.trim();
-  if(!em){bn('ใส่อีเมลก่อน แล้วค่อยกดตัวเลข');return}
+  var em=CFG.owner;
   if(pin.length>=6)return;pin+=k;drawAuth();
   if(pin.length===6){pbusy=true;SB.auth.signInWithPassword({email:em,password:pin}).then(function(r){pbusy=false;
     if(r.error){pin='';bn('อีเมลหรือรหัส PIN ไม่ถูกต้อง');drawAuth();return}
@@ -155,7 +152,8 @@ function editMenuHd(m){return '<div class="row">'+fld('e1',m.name,'text','ชื
 function saveMenu(id){var n=val('e1').trim(),p=+val('e2');if(!n||!(p>=0))return;upd('menus',id,function(o){o.name=n;o.price=p})}
 function recEdit(m,r,k){var o=S.ings.map(function(x){return '<option value="'+x.id+'"'+(x.id===r.ing?' selected':'')+'>'+esc(x.name)+'</option>'}).join('');return '<div class="li"><span class="row"><select id="e1">'+o+'</select><input type="number" id="e2" value="'+r.qty+'" min="0" step="any" style="flex:0 1 90px"></span><span>'+btns("saveRec('"+m.id+"',"+k+")")+'</span></div>'}
 function saveRec(id,k){var q=+val('e2');if(!(q>0))return;upd('menus',id,function(m){m.recipe[k]={ing:val('e1'),qty:q}})}
-function draw(){draw0();drawAuth();roFix()}
+function draw(){if(SB&&!canEdit){lock();return}draw0();drawAuth();roFix()}
+function lock(){document.getElementById('nav').innerHTML='';document.getElementById('v').innerHTML='<p class="mu" style="text-align:center;margin:30px 0 10px">🔒 ใส่รหัส PIN เพื่อเข้าดูและแก้ไขข้อมูล</p>';padOpen=true;drawAuth()}
 function draw0(){
   document.getElementById('nav').innerHTML=TABS.map(function(t){return '<button class="'+(t[0]===tab?'on':'')+'" onclick="go(\''+t[0]+'\')">'+t[1]+'</button>'}).join('');
   document.getElementById('v').innerHTML=({sum:vSum,sale:vSale,exp:vExp,menu:vMenu,ing:vIng,bk:vBk,today:vToday})[tab]();
