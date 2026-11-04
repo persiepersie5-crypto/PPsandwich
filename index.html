@@ -33,6 +33,10 @@ input,select{font:inherit;padding:8px 10px;border:1px solid var(--bd);border-rad
 .li{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--bd);align-items:center}
 .li:first-of-type{border-top:0}
 .sc{overflow-x:auto}
+.dots{display:flex;gap:14px;justify-content:center;margin:16px 0}.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ac)}.dot.on{background:var(--ac)}
+.pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;justify-content:center;margin-bottom:8px}
+.key{width:72px;height:72px;border-radius:50%;border:1px solid var(--bd);background:var(--card);color:var(--tx);font:600 24px 'Noto Sans Thai',system-ui,sans-serif;cursor:pointer}.key:active{background:var(--ac);color:var(--ac2)}
+
 #bn{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card)}
 #bn:not(:empty){padding:8px 12px;border:1px solid var(--r);border-radius:10px;margin-bottom:10px}
 </style>
@@ -73,8 +77,24 @@ function init(){
   SB.auth.onAuthStateChange(function(ev,s){var c=!!s;if(c!==canEdit){canEdit=c;load()}});
   SB.channel('rec').on('postgres_changes',{event:'*',schema:'public',table:'records'},function(){clearTimeout(LT);LT=setTimeout(load,400)}).subscribe()}
 function drawAuth(){var a=document.getElementById('au');if(!SB){a.innerHTML='';return}
-  a.innerHTML=canEdit?'<div class="row" style="margin-bottom:10px"><span class="mu">เข้าสู่ระบบแล้ว (แก้ไขได้)</span><button class="x" style="color:var(--mu)" onclick="SB.auth.signOut()">ออกจากระบบ</button></div>':'<details class="card"><summary class="mu">ดูอย่างเดียว · เจ้าของร้านเข้าสู่ระบบเพื่อแก้ไข</summary><div class="row" style="margin-top:8px"><input id="le" type="email" placeholder="อีเมล"><input id="lp" type="password" placeholder="รหัสผ่าน"><button class="btn" onclick="login()">เข้าสู่ระบบ</button></div></details>'}
-function login(){SB.auth.signInWithPassword({email:val('le'),password:val('lp')}).then(function(r){bn(r.error?'เข้าสู่ระบบไม่ได้: '+r.error.message:'')})}
+  a.innerHTML=canEdit?'<div class="row" style="margin-bottom:10px"><span class="mu">เข้าสู่ระบบแล้ว (แก้ไขได้)</span><button class="x" style="color:var(--mu)" onclick="SB.auth.signOut()">ออกจากระบบ</button></div>':padHtml()}
+var pin='',pem='',padOpen=false,pbusy=false;
+function padHtml(){var em='';try{em=localStorage.getItem('swe')||''}catch(e){}
+  var dots='';for(var i=0;i<6;i++)dots+='<span class="dot'+(i<pin.length?' on':'')+'"></span>';
+  var keys=[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(function(k){return k===''?'<span></span>':'<button class="key" onclick="pk(\''+k+'\')">'+k+'</button>'}).join('');
+  return '<details class="card"'+(padOpen?' open':'')+' ontoggle="padOpen=this.open"><summary class="mu">ดูอย่างเดียว · เจ้าของร้านเข้าสู่ระบบเพื่อแก้ไข</summary>'+
+  (em?'<p class="mu" style="text-align:center;margin:10px 0 0">'+esc(em)+' · <a href="#" onclick="chEm();return false">เปลี่ยนอีเมล</a></p>':'<div class="row" style="margin-top:10px"><input id="le" type="email" placeholder="อีเมลเจ้าของร้าน" value="'+esc(pem)+'" oninput="pem=this.value"></div>')+
+  '<div class="dots">'+dots+'</div><div class="pad">'+keys+'</div></details>'}
+function pk(k){if(pbusy)return;
+  if(k==='⌫'){pin=pin.slice(0,-1);drawAuth();return}
+  var em='';try{em=localStorage.getItem('swe')||''}catch(e){}
+  if(!em)em=pem.trim();
+  if(!em){bn('ใส่อีเมลก่อน แล้วค่อยกดตัวเลข');return}
+  if(pin.length>=6)return;pin+=k;drawAuth();
+  if(pin.length===6){pbusy=true;SB.auth.signInWithPassword({email:em,password:pin}).then(function(r){pbusy=false;
+    if(r.error){pin='';bn('อีเมลหรือรหัส PIN ไม่ถูกต้อง');drawAuth();return}
+    try{localStorage.setItem('swe',em)}catch(e){}pin='';padOpen=false;bn('')})}}
+function chEm(){try{localStorage.removeItem('swe')}catch(e){}pin='';drawAuth()}
 function roFix(){if(canEdit)return;
   if(tab==='bk'){tab='sum';draw();return}
   document.querySelectorAll('#nav button').forEach(function(b){if(b.textContent==='สำรอง')b.remove()});
