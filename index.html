@@ -80,15 +80,15 @@ function drawAuth(){var a=document.getElementById('au');if(!SB){a.innerHTML='';r
   a.innerHTML=canEdit?'<div class="row" style="margin-bottom:10px"><span class="mu">เข้าสู่ระบบแล้ว (แก้ไขได้)</span><button class="x" style="color:var(--mu)" onclick="SB.auth.signOut()">ออกจากระบบ</button></div>':padHtml()}
 var pin='',pem='',padOpen=false,pbusy=false;
 function padHtml(){var em='';try{em=localStorage.getItem('swe')||''}catch(e){}
-  var dots='';for(var i=0;i<6;i++)dots+='<span class="dot'+(i<pin.length?' on':'')+'"></span>';
+  var dots='';for(var i=0;i<4;i++)dots+='<span class="dot'+(i<pin.length?' on':'')+'"></span>';
   var keys=[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(function(k){return k===''?'<span></span>':'<button class="key" onclick="pk(\''+k+'\')">'+k+'</button>'}).join('');
   return '<details class="card"'+(padOpen?' open':'')+' ontoggle="padOpen=this.open"><summary class="mu">ดูอย่างเดียว · เจ้าของร้านเข้าสู่ระบบเพื่อแก้ไข</summary>'+
     '<div class="dots">'+dots+'</div><div class="pad">'+keys+'</div></details>'}
 function pk(k){if(pbusy)return;
   if(k==='⌫'){pin=pin.slice(0,-1);drawAuth();return}
   var em=CFG.owner;
-  if(pin.length>=6)return;pin+=k;drawAuth();
-  if(pin.length===6){pbusy=true;SB.auth.signInWithPassword({email:em,password:pin}).then(function(r){pbusy=false;
+  if(pin.length>=4)return;pin+=k;drawAuth();
+  if(pin.length===4){pbusy=true;SB.auth.signInWithPassword({email:em,password:'PP'+pin+'sw'}).then(function(r){pbusy=false;
     if(r.error){pin='';bn('อีเมลหรือรหัส PIN ไม่ถูกต้อง');drawAuth();return}
     try{localStorage.setItem('swe',em)}catch(e){}pin='';padOpen=false;bn('')})}}
 function chEm(){try{localStorage.removeItem('swe')}catch(e){}pin='';drawAuth()}
