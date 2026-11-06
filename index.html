@@ -33,6 +33,7 @@ input,select{font:inherit;padding:8px 10px;border:1px solid var(--bd);border-rad
 .li{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--bd);align-items:center}
 .li:first-of-type{border-top:0}
 .sc{overflow-x:auto}
+.chip{font:inherit;padding:8px 14px;border-radius:999px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer}.chip.on{background:linear-gradient(135deg,var(--ac),var(--ac3));color:var(--ac2);border-color:transparent}
 .dots{display:flex;gap:14px;justify-content:center;margin:16px 0}.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ac)}.dot.on{background:var(--ac)}
 .pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;justify-content:center;margin-bottom:8px}
 .key{width:72px;height:72px;border-radius:50%;border:1px solid var(--bd);background:var(--card);color:var(--tx);font:600 24px 'Noto Sans Thai',system-ui,sans-serif;cursor:pointer}.key:active{background:var(--ac);color:var(--ac2)}
@@ -98,20 +99,27 @@ function roFix(){if(canEdit)return;
   document.querySelectorAll('#v .btn').forEach(function(b){if((b.getAttribute('onclick')||'').indexOf('pm=')===0)return;
     var c=b.closest('.card');if(c&&c.firstElementChild&&c.firstElementChild.tagName==='H2')c.remove();else{var r=b.closest('.row');if(r)r.remove()}});
   document.querySelectorAll('#v .x').forEach(function(b){b.remove()})}
+var pick={};
+function pickHtml(){if(!canEdit||!S.menus.length)return '';
+  var left=S.menus.filter(function(m){return !S.prod.some(function(x){return x.id==='p_'+td+'_'+m.id})&&!S.sales.some(function(s){return s.date===td&&(s.name===m.name||s.name===m.name+' (ครึ่ง)')})});
+  return '<div class="card"><h2>วันนี้ทำเมนูอะไรบ้าง</h2>'+(left.length?'<div class="row">'+left.map(function(m){return '<button class="chip'+(pick[m.id]?' on':'')+'" onclick="tg(\''+m.id+'\')">'+esc(m.name)+'</button>'}).join('')+'</div><div class="row" style="margin-top:10px"><button class="btn" onclick="addPick()">เพิ่มเมนูที่เลือก</button></div>':'<p class="mu" style="margin:0">เพิ่มครบทุกเมนูแล้ว</p>')+'</div>'}
+function tg(id){pick[id]=!pick[id];draw()}
+function addPick(){var n=0;S.menus.forEach(function(m){var id='p_'+td+'_'+m.id;if(pick[m.id]&&!S.prod.some(function(x){return x.id===id})){S.prod.push({id:id,date:td,menu:m.id,name:m.name,qty:1,cost:mcost(m)*uf(m)});n++}});pick={};if(n)save();draw()}
+function rmMade(mid){S.prod=S.prod.filter(function(x){return x.id!=='p_'+td+'_'+mid});save();draw()}
 function uf(m){return (m.full||m.name==='โบราณหมูหยอง')?1:0.5}
 function vToday(noDate){
   var mine=function(m){return S.sales.filter(function(s){return s.date===td&&(s.name===m.name||s.name===m.name+' (ครึ่ง)')})};
   var T={m:0,s:0,r:0,c:0},R=[];
   var rows=S.menus.map(function(m){
-    var uc=mcost(m)*uf(m),p=S.prod.find(function(x){return x.id==='p_'+td+'_'+m.id}),made=p?p.qty:0,ms=mine(m);
+    var uc=mcost(m)*uf(m),p=S.prod.find(function(x){return x.id==='p_'+td+'_'+m.id}),made=p?p.qty:0,ms=mine(m);if(!p&&!ms.length)return '';
     var sold=ms.reduce(function(a,s){return a+s.qty},0),rev=ms.reduce(function(a,s){return a+s.qty*s.price},0),cost=Math.max(made,sold)*uc,pf=rev-cost;
     T.m+=made;T.s+=sold;T.r+=rev;T.c+=cost;R.push({n:m.name,a:made,b:sold});
-    return '<div class="card"><div class="row" style="justify-content:space-between"><b>'+esc(m.name)+'</b><span class="'+(pf>=0?'g':'r')+'">'+(pf>=0?'กำไร ':'ขาดทุน ')+fmt(Math.abs(pf))+'</span></div>'+
+    return '<div class="card"><div class="row" style="justify-content:space-between"><b>'+esc(m.name)+'</b><span class="'+(pf>=0?'g':'r')+'">'+(pf>=0?'กำไร ':'ขาดทุน ')+fmt(Math.abs(pf))+'</span>'+(canEdit&&!sold?'<button class="x" onclick="rmMade(\''+m.id+'\')">×</button>':'')+'</div>'+
     '<div class="row" style="margin-top:8px"><span>ทำ</span>'+(canEdit?'<button class="btn" onclick="chMade(\''+m.id+'\',-1)">−</button><b style="min-width:28px;text-align:center">'+made+'</b><button class="btn" onclick="chMade(\''+m.id+'\',1)">+</button>':'<b>'+made+'</b>')+'<span>อัน</span><span style="margin-left:auto">ขายได้</span>'+
     (canEdit?'<button class="btn" onclick="qSale(\''+m.id+'\',-1)">−</button><b style="min-width:28px;text-align:center">'+sold+'</b><button class="btn" onclick="qSale(\''+m.id+'\',1)">+</button>':'<b>'+sold+'</b>')+'<span>อัน</span>'+'</div>'+
-    '<p class="mu" style="margin:6px 0 0">เหลือ '+(made-sold)+' อัน · รายรับ '+fmt(rev)+' · ต้นทุนที่ทำ '+fmt(cost)+'</p></div>'}).join('')||'<p class="mu">เพิ่มเมนูในแท็บ “เมนู” ก่อนนะครับ</p>';
+    '<p class="mu" style="margin:6px 0 0">เหลือ '+(made-sold)+' อัน · รายรับ '+fmt(rev)+' · ต้นทุนที่ทำ '+fmt(cost)+'</p></div>'}).join('')||'<p class="mu">'+(S.menus.length?'ยังไม่ได้เลือกเมนูที่ทำวันนี้ เลือกด้านบนแล้วกดเพิ่ม':'เพิ่มเมนูในแท็บ “เมนู” ก่อนนะครับ')+'</p>';
   var oth=S.exps.filter(function(e){return e.date===td&&e.type!=='buy'}).reduce(function(a,e){return a+e.amount},0),net=T.r-T.c-oth;
-  return (noDate?'':'<div class="row" style="margin-bottom:10px"><label>วันที่</label><input type="date" value="'+td+'" onchange="td=this.value||td;draw()"></div>')+
+  return (noDate?'':'<div class="row" style="margin-bottom:10px"><label>วันที่</label><input type="date" value="'+td+'" onchange="td=this.value||td;draw()"></div>'+pickHtml())+
   '<div class="grid"><div class="stat"><small>ทำทั้งหมด</small><b>'+T.m+' อัน</b></div><div class="stat"><small>ขายได้</small><b>'+T.s+' อัน</b></div>'+
   '<div class="stat"><small>เหลือ</small><b>'+(T.m-T.s)+' อัน</b></div><div class="stat"><small>รายรับ</small><b>'+fmt(T.r)+'</b></div>'+
   '<div class="stat"><small>ต้นทุนของที่ทำ</small><b>'+fmt(T.c)+'</b></div><div class="stat"><small>รายจ่ายอื่นๆ วันนี้</small><b>'+fmt(oth)+'</b></div></div>'+
