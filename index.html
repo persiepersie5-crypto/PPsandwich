@@ -102,9 +102,10 @@ function roFix(){if(canEdit)return;
 var pick={};
 function pickHtml(){if(!canEdit||!S.menus.length)return '';
   var left=S.menus.filter(function(m){return !S.prod.some(function(x){return x.id==='p_'+td+'_'+m.id})&&!S.sales.some(function(s){return s.date===td&&(s.name===m.name||s.name===m.name+' (ครึ่ง)')})});
-  return '<div class="card"><h2>วันนี้ทำเมนูอะไรบ้าง</h2>'+(left.length?'<div class="row">'+left.map(function(m){return '<button class="chip'+(pick[m.id]?' on':'')+'" onclick="tg(\''+m.id+'\')">'+esc(m.name)+'</button>'}).join('')+'</div><div class="row" style="margin-top:10px"><button class="btn" onclick="addPick()">เพิ่มเมนูที่เลือก</button></div>':'<p class="mu" style="margin:0">เพิ่มครบทุกเมนูแล้ว</p>')+'</div>'}
-function tg(id){pick[id]=!pick[id];draw()}
-function addPick(){var n=0;S.menus.forEach(function(m){var id='p_'+td+'_'+m.id;if(pick[m.id]&&!S.prod.some(function(x){return x.id===id})){S.prod.push({id:id,date:td,menu:m.id,name:m.name,qty:1,cost:mcost(m)*uf(m)});n++}});pick={};if(n)save();draw()}
+  if(!left.length)return '';
+  return '<div class="row" style="margin-bottom:10px"><select id="pm"><option value="">+ เลือกเมนูที่ทำวันนี้</option>'+left.map(function(m){return '<option value="'+m.id+'">'+esc(m.name)+'</option>'}).join('')+'</select><button class="btn" onclick="addOne()">เพิ่ม</button></div>'}
+function addOne(){var id=val('pm'),m=S.menus.find(function(x){return x.id===id});if(!m)return;
+  S.prod.push({id:'p_'+td+'_'+m.id,date:td,menu:m.id,name:m.name,qty:1,cost:mcost(m)*uf(m)});save();draw()}
 function rmMade(mid){S.prod=S.prod.filter(function(x){return x.id!=='p_'+td+'_'+mid});save();draw()}
 function uf(m){return (m.full||m.name==='โบราณหมูหยอง')?1:0.5}
 function vToday(noDate){
