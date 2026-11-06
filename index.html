@@ -33,6 +33,8 @@ input,select{font:inherit;padding:8px 10px;border:1px solid var(--bd);border-rad
 .li{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--bd);align-items:center}
 .li:first-of-type{border-top:0}
 .sc{overflow-x:auto}
+.mc{padding:8px 10px;margin-bottom:6px;border-radius:10px;font-size:14px}.mc .row{gap:6px}.mc .row+.row{margin-top:4px!important}
+.mc .btn{padding:1px 10px;border-radius:6px;font-size:14px;line-height:1.5}.mc b{font-size:14px}.mc p.mu{font-size:12px;margin:3px 0 0!important}.mc .x{font-size:16px;padding:0 4px}
 .chip{font:inherit;padding:8px 14px;border-radius:999px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer}.chip.on{background:linear-gradient(135deg,var(--ac),var(--ac3));color:var(--ac2);border-color:transparent}
 .dots{display:flex;gap:14px;justify-content:center;margin:16px 0}.dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ac)}.dot.on{background:var(--ac)}
 .pad{display:grid;grid-template-columns:repeat(3,72px);gap:12px;justify-content:center;margin-bottom:8px}
@@ -115,7 +117,7 @@ function vToday(noDate){
     var uc=mcost(m)*uf(m),p=S.prod.find(function(x){return x.id==='p_'+td+'_'+m.id}),made=p?p.qty:0,ms=mine(m);if(!p&&!ms.length)return '';
     var sold=ms.reduce(function(a,s){return a+s.qty},0),rev=ms.reduce(function(a,s){return a+s.qty*s.price},0),cost=Math.max(made,sold)*uc,pf=rev-cost;
     T.m+=made;T.s+=sold;T.r+=rev;T.c+=cost;R.push({n:m.name,a:made,b:sold});
-    return '<div class="card"><div class="row" style="justify-content:space-between"><b>'+esc(m.name)+'</b><span class="'+(pf>=0?'g':'r')+'">'+(pf>=0?'กำไร ':'ขาดทุน ')+fmt(Math.abs(pf))+'</span>'+(canEdit&&!sold?'<button class="x" onclick="rmMade(\''+m.id+'\')">×</button>':'')+'</div>'+
+    return '<div class="card mc"><div class="row" style="justify-content:space-between"><b>'+esc(m.name)+'</b><span class="'+(pf>=0?'g':'r')+'">'+(pf>=0?'กำไร ':'ขาดทุน ')+fmt(Math.abs(pf))+'</span>'+(canEdit&&!sold?'<button class="x" onclick="rmMade(\''+m.id+'\')">×</button>':'')+'</div>'+
     '<div class="row" style="margin-top:8px"><span>ทำ</span>'+(canEdit?'<button class="btn" onclick="chMade(\''+m.id+'\',-1)">−</button><b style="min-width:28px;text-align:center">'+made+'</b><button class="btn" onclick="chMade(\''+m.id+'\',1)">+</button>':'<b>'+made+'</b>')+'<span>อัน</span><span style="margin-left:auto">ขายได้</span>'+
     (canEdit?'<button class="btn" onclick="qSale(\''+m.id+'\',-1)">−</button><b style="min-width:28px;text-align:center">'+sold+'</b><button class="btn" onclick="qSale(\''+m.id+'\',1)">+</button>':'<b>'+sold+'</b>')+'<span>อัน</span>'+'</div>'+
     '<p class="mu" style="margin:6px 0 0">เหลือ '+(made-sold)+' อัน · รายรับ '+fmt(rev)+' · ต้นทุนที่ทำ '+fmt(cost)+'</p></div>'}).join('')||'<p class="mu">'+(S.menus.length?'ยังไม่ได้เลือกเมนูที่ทำวันนี้ เลือกด้านบนแล้วกดเพิ่ม':'เพิ่มเมนูในแท็บ “เมนู” ก่อนนะครับ')+'</p>';
